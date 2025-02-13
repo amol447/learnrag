@@ -1,6 +1,6 @@
 # TODO List
 
-- [ ] Task 1: Orient Images Correctly
+- [X] Task 1: Orient Images Correctly
 - [ ] Task 2: Run Face Detection
 - [ ] Task 3: Save Bounding Box metadata in db
 - [ ] Task 4: Cluster images based on faces

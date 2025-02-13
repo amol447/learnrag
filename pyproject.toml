@@ -13,6 +13,9 @@ dependencies = [
     "ipython>=8.32.0",
     "matplotlib>=3.10.0",
     "jupyter>=1.1.1",
+    "sqlalchemy>=2.0.38",
+    "pgvector>=0.3.6",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [[tool.uv.index]]
