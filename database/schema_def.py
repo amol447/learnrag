@@ -1,9 +1,19 @@
-from sqlalchemy import Column, Integer, String, create_engine, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    create_engine,
+    ForeignKey,
+    Table,
+    MetaData,
+)
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+
+table_space = "alternate"
 
 
 def get_engine():
@@ -12,38 +22,38 @@ def get_engine():
     return create_engine(f"postgresql://{user}:{password}@localhost/img_project")
 
 
-Base = declarative_base()
+metadata = MetaData()
+image_data = Table(
+    "image_data",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("path", String, unique=True, nullable=False),
+    Column("overall_embedding", Vector(128), nullable=False),
+    Column("image_type", String, nullable=False),
+    postgresql_tablespace=table_space,
+)
 
 
-class ImageData(Base):
-    __tablename__ = "image_data"
-    __table_args__ = {"postgresql_tablespace": "alternate"}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    path = Column(String, unique=True, nullable=False)
-    overall_embedding = Column(Vector(128), nullable=False)
-    image_type = Column(String, nullable=False)
-
-
-class Person(Base):
-    __tablename__ = "person"
-    __table_args__ = {"postgresql_tablespace": "alternate"}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
-
-
-class FaceData(Base):
-    __tablename__ = "face_data"
-    __table_args__ = {"postgresql_tablespace": "alternate"}
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    image_id = Column(Integer, ForeignKey("image_data.id"), nullable=False)
-    face_embedding = Column(Vector(128), nullable=False)
-    face_box = Column(ARRAY(Integer), nullable=False)
-    face_tag_id = Column(Integer, ForeignKey("person.id"), nullable=True)
-
-
+face_data = Table(
+    "face_data",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("image_id", Integer, ForeignKey("image_data.id"), nullable=False),
+    Column("face_embedding", Vector(128), nullable=True),
+    Column("face_box", ARRAY(Integer), nullable=False),
+    Column("face_tag_id", Integer, ForeignKey("person.id"), nullable=True),
+    postgresql_tablespace=table_space,
+)
+person = Table(
+    "person",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("first_name", String, nullable=False),
+    Column("last_name", String, nullable=False),
+    postgresql_tablespace=table_space,
+)
 # Example engine and session creation
 engine = get_engine()
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+metadata.create_all(engine)
+# Session = sessionmaker(bind=engine)
+# session = Session()
