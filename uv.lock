@@ -907,6 +907,7 @@ dependencies = [
     { name = "pgvector" },
     { name = "pillow" },
     { name = "psycopg2-binary" },
+    { name = "pyexiftool" },
     { name = "sqlalchemy" },
     { name = "torch" },
     { name = "torchaudio" },
@@ -922,6 +923,7 @@ requires-dist = [
     { name = "pgvector", specifier = ">=0.3.6" },
     { name = "pillow", specifier = ">=11.1.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pyexiftool", specifier = ">=0.5.6" },
     { name = "sqlalchemy", specifier = ">=2.0.38" },
     { name = "torch", specifier = ">=2.6.0" },
     { name = "torchaudio", specifier = ">=2.6.0" },
@@ -1469,6 +1471,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/1d/b2/31537cf4b1ca988837256c910a668b553fceb8f069bedc4b1c826024b52c/pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6", size = 172736 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/13/a3/a812df4e2dd5696d1f351d58b8fe16a405b234ad2886a0dab9183fb78109/pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc", size = 117552 },
+]
+
+[[package]]
+name = "pyexiftool"
+version = "0.5.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/48/406da6691d15abf3c8d399bce8bc588709a5b54e857fd7c22dad2f90c33c/PyExifTool-0.5.6.tar.gz", hash = "sha256:22a972c1c212d1ad5f61916fded5057333dcc48fb8e42eed12d2ff9665b367ae", size = 56365 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fc/b9/175e9a1f8f3f94b22f622f0fcac853ae2c43cb4ac6034f849269c6086dac/PyExifTool-0.5.6-py3-none-any.whl", hash = "sha256:ac7d7836d2bf373f20aa558528f6b2222c4c0d896ed28c951a3ff8e6cec05a87", size = 51243 },
 ]
 
 [[package]]

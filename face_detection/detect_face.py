@@ -1,19 +1,16 @@
-from functools import reduce
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 import sqlalchemy
 import torch
-import numpy as np
 from sqlalchemy import select
 from torchvision.models.detection import (
     retinanet_resnet50_fpn_v2,
     RetinaNet_ResNet50_FPN_V2_Weights,
 )
-from PIL import Image, ExifTags
-import torchvision.transforms.functional as F
-import matplotlib.pyplot as plt
+from PIL import Image
 from database.schema_def import face_data, image_data
+from utils.utils import get_img_list
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -25,13 +22,6 @@ def get_model_and_preprocess():
     preprocess = RetinaNet_ResNet50_FPN_V2_Weights.DEFAULT.transforms().to(device)
     model.eval()
     return model, preprocess
-
-
-def get_img_list(path: Path):
-    img_types = [".jpg", ".jpeg", ".png", "JPG", "JPEG", "PNG"]
-    return reduce(
-        lambda x, y: x + y, [list(path.glob(f"*{img_type}")) for img_type in img_types]
-    )
 
 
 def process_batch(image_path_list: List[Path], model, preprocess):
@@ -57,12 +47,21 @@ def chunks(l: List, batch_size):
         yield l[i : min(i + batch_size, len(l))]
 
 
-def process_directory(path: Path, engine, batch_size=2):
+def process_directory(engine, batch_size=2):
     model, preprocess = get_model_and_preprocess()
-    image_path_list = get_img_list(path)
+    image_query = select([image_data.c.path, image_data.c.id])
+    path_id_dict = dict()
+    with engine.connect() as conn:
+        result = conn.execute(image_query)
+        for row in result.fetchall():
+            row_dict = dict(row)
+            path_id_dict[row_dict["path"]] = row_dict["id"]
 
-    for chunk in chunks(image_path_list, batch_size):
+    for chunk in chunks(path_id_dict.keys(), batch_size):
         boxes_dict = process_batch(chunk, model, preprocess)
+        for image_path in chunk:
+            image_id = path_id_dict[image_path]
+            boxes_dict[image_id] = boxes_dict.pop(image_path)
         save_boxes(boxes_dict, engine)
     return boxes_dict
 
@@ -81,15 +80,11 @@ def create_face_data_rows(boxes_dict: dict):
     return face_data_rows
 
 
-def save_boxes(boxes_dict: dict, engine: sqlalchemy.engine):
+def save_boxes(boxes_dict: Dict, engine: sqlalchemy.engine):
     rows = create_face_data_rows(boxes_dict)
-    image_id_cte = (
-        select(image_data.c.id, image_data.c.path)
-        .where(image_data.c.path.in_(list(boxes_dict.keys())))
-        .cte("image_id_cte")
-    )
+
     delete_query = face_data.delete().where(
-        face_data.c.image_id.in_(select([image_id_cte.c.id]))
+        face_data.c.image_id.in_(list(boxes_dict.keys()))
     )
     with engine.connect() as conn:
         conn.execute(delete_query)

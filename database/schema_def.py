@@ -8,6 +8,7 @@ from sqlalchemy import (
     MetaData,
     Index,
     UniqueConstraint,
+    JSON,
 )
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -32,6 +33,7 @@ image_data = Table(
     Column("path", String, unique=True, nullable=False),
     Column("overall_embedding", Vector(128), nullable=True),
     Column("image_type", String, nullable=False),
+    Column("exif", JSON, nullable=True),
     postgresql_tablespace=table_space,
 )
 
