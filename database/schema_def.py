@@ -6,6 +6,8 @@ from sqlalchemy import (
     ForeignKey,
     Table,
     MetaData,
+    Index,
+    UniqueConstraint,
 )
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -28,7 +30,7 @@ image_data = Table(
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("path", String, unique=True, nullable=False),
-    Column("overall_embedding", Vector(128), nullable=False),
+    Column("overall_embedding", Vector(128), nullable=True),
     Column("image_type", String, nullable=False),
     postgresql_tablespace=table_space,
 )
@@ -50,8 +52,14 @@ person = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("first_name", String, nullable=False),
     Column("last_name", String, nullable=False),
+    UniqueConstraint(
+        "first_name",
+        "last_name",
+        name="person_first_last_uix",
+    ),
     postgresql_tablespace=table_space,
 )
+
 # Example engine and session creation
 engine = get_engine()
 metadata.create_all(engine)
