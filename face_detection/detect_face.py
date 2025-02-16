@@ -4,6 +4,7 @@ from typing import List, Dict
 import sqlalchemy
 import torch
 from sqlalchemy import select
+from torchvision.io import decode_image
 from torchvision.models.detection import (
     retinanet_resnet50_fpn_v2,
     RetinaNet_ResNet50_FPN_V2_Weights,
@@ -11,6 +12,19 @@ from torchvision.models.detection import (
 from PIL import Image
 from database.schema_def import face_data, image_data
 from utils.utils import get_img_list
+import logging
+import sys
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+from utils.logging import setup_logger
+
+logger = setup_logger(
+    name="detect_face",
+    log_file=Path("logs/app.log"),
+    level=logging.INFO,
+    add_timestamp=True,
+)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -26,9 +40,10 @@ def get_model_and_preprocess():
 
 def process_batch(image_path_list: List[Path], model, preprocess):
     processed_img_list = [
-        preprocess(Image.open(image_path)).to(device) for image_path in image_path_list
+        preprocess(decode_image(image_path, mode="RGB")).to(device)
+        for image_path in image_path_list
     ]
-
+    logger.debug(f"processing {', '.join(x.name for x in image_path_list)}")
     with torch.no_grad():
         predictions = model(processed_img_list)
 
@@ -62,7 +77,7 @@ def process_all(engine, batch_size=10):
         result = conn.execute(image_query).fetchall()
         for row in result:
             row_dict = row._asdict()
-            path_image_id_dict[row_dict["path"]] = row_dict["id"]
+            path_image_id_dict[Path(row_dict["path"])] = row_dict["id"]
 
     for chunk in chunks(list(path_image_id_dict.keys()), batch_size):
         path_boxes_dict = process_batch(chunk, model, preprocess)
